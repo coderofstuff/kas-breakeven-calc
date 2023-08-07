@@ -2,7 +2,7 @@ import { useState } from 'react';
 import NextApp, { AppProps, AppContext } from 'next/app';
 import { getCookie, setCookie } from 'cookies-next';
 import Head from 'next/head';
-import { Group, Anchor, MantineProvider, ColorScheme, ColorSchemeProvider } from '@mantine/core';
+import { Group, Stack, Anchor, MantineProvider, ColorScheme, ColorSchemeProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 
 export default function App(props: AppProps & { colorScheme: ColorScheme }) {
@@ -18,7 +18,7 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
   return (
     <>
       <Head>
-        <title>Mantine next example</title>
+        <title>Kaspa Breakeven Calculator</title>
         <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
         <link rel="shortcut icon" href="/favicon.svg" />
       </Head>
@@ -30,9 +30,14 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
         </MantineProvider>
 
         <Group position='center'>
-          <Anchor href="https://github.com/coderofstuff/kas-breakeven-calc" target="_blank" size={'xs'}>
-            kas-breakeven-calc by coderofstuff
-          </Anchor>
+          <Stack align='center'>
+            <Anchor href="https://github.com/coderofstuff/kas-breakeven-calc" target="_blank" size={'xs'}>
+              kas-breakeven-calc by coderofstuff
+            </Anchor>
+            <Anchor href="https://explorer.kaspa.org/addresses/kaspa:qpfp8gzttv5c356p8cdj0kv56py4n29w97prxrav65m0zpn58yuaz3awck5vl?page=1" target="_blank" size={'xs'}>
+              Found this useful? Donate here
+            </Anchor>
+          </Stack>
         </Group>
       </ColorSchemeProvider>
     </>
