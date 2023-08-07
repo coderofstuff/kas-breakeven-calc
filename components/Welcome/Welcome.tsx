@@ -1,6 +1,6 @@
 "use client";
 
-import { Anchor, Table, TextInput, Button, Group, Text, Box } from '@mantine/core';
+import { NumberInput, Table, TextInput, Button, Group, Text, Box } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useState } from 'react';
@@ -10,15 +10,22 @@ function calcBreakeven({ machineCost, machineHashrate, wattage, costPerKwh, hash
   let hashrate = Number(startingHashrate);
   let i = 0;
   let currentDate = new Date(startingDate);
-  let chromaticReward = 195.997718;
-  let chromaticDate = new Date('2023-07-08');
+  let chromaticReward = 220;
+  let chromaticDate = new Date('2023-05-08');
+
   let checkDate = new Date(chromaticDate);
   checkDate.setDate(chromaticDate.getDate() + 30);
 
   const dailyEarnings = [];
 
+  while (currentDate > chromaticDate) {
+    chromaticDate = checkDate;
+    checkDate.setDate(chromaticDate.getDate() + 30);
+    chromaticReward = Number((chromaticReward * (0.5 ** (1/12))).toFixed(8));
+  }
+
   while (netEarnings < machineCost) {
-      while (currentDate < checkDate) {
+      while (currentDate > checkDate) {
         chromaticDate = checkDate;
         checkDate.setDate(chromaticDate.getDate() + 30);
         chromaticReward = Number((chromaticReward * (0.5 ** (1/12))).toFixed(8));
@@ -78,6 +85,11 @@ export function Welcome() {
       startingDate: today,
       price: 0.05,
     },
+    validate: {
+      startingDate: (date) => {
+        return date < new Date('2023-06-01') ? 'ASICs only arrived after 2023-06-01' : null;
+      },
+    }
   });
 
   function handleSubmit(values) {
@@ -137,42 +149,44 @@ export function Welcome() {
     <>
     <Box maw={340} mx="auto">
       <form onSubmit={form.onSubmit(handleSubmit)}>
-        <TextInput
+        <NumberInput
           withAsterisk
           label="Machine Cost"
           placeholder="1000"
           {...form.getInputProps('machineCost')}
         />
 
-        <TextInput
+        <NumberInput
           withAsterisk
           label="Machine Hashrate (TH/s)"
           placeholder="0.1"
+          precision={3}
           {...form.getInputProps('machineHashrate')}
         />
 
-        <TextInput
+        <NumberInput
           withAsterisk
           label="Wattage"
           placeholder="65"
           {...form.getInputProps('wattage')}
         />
 
-        <TextInput
+        <NumberInput
           withAsterisk
           label="Cost per KWH"
           placeholder="0.1"
+          precision={3}
           {...form.getInputProps('costPerKwh')}
         />
 
-        <TextInput
+        <NumberInput
           withAsterisk
           label="Hashrate Increase per Day (TH/s)"
           placeholder="147"
           {...form.getInputProps('hashRateIncreasePerDay')}
         />
 
-        <TextInput
+        <NumberInput
           withAsterisk
           label="Network Hashrate on start of mining (TH/s)"
           placeholder="4730"
