@@ -3,7 +3,9 @@
 import { NumberInput, Table, TextInput, Button, Group, Text, Box } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+
 
 function calcBreakeven({ machineCost, machineHashrate, wattage, costPerKwh, hashRateIncreasePerDay, startingHashrate, startingDate, price }) {
   let netEarnings = 0;
@@ -80,10 +82,10 @@ export function Welcome() {
       machineHashrate: 0.1,
       wattage: 65,
       costPerKwh: 0.1,
-      hashRateIncreasePerDay: 147,
-      startingHashrate: 4250,
+      hashRateIncreasePerDay: 100,
+      startingHashrate: 0,
       startingDate: today,
-      price: 0.05,
+      price: 0,
     },
     validate: {
       startingDate: (date) => {
@@ -91,6 +93,33 @@ export function Welcome() {
       },
     }
   });
+
+  useEffect(() => {
+    const pricePromise = axios.get('https://api.kaspa.org/info/price').then(({ data }) => {
+      return Number(data.price.toFixed(3));
+    }).catch((e) => {
+      console.error(e);
+      return 0.05;
+    });
+
+    const hashratePromise = axios.get('https://api.kaspa.org/info/hashrate').then(({ data }) => {
+      return Math.ceil(data.hashrate);
+    }).catch((e) => {
+      console.error(e);
+      return 5000;
+    });
+
+    let unloaded = false;
+    Promise.all([pricePromise, hashratePromise]).then(([price, hashrate]) => {
+      if (!unloaded) {
+        form.setValues({ price, startingHashrate: hashrate});
+      }
+    });
+
+    return () => {
+      unloaded = true;
+    };
+  }, []);
 
   function handleSubmit(values) {
     const {dailyEarnings, breakEvenDate, netEarnings, canBreakEven} = calcBreakeven(values);
