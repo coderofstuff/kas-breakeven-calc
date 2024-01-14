@@ -34,7 +34,8 @@ function calcBreakeven({ machineCost, machineHashrate, wattage, costPerKwh, hash
       }
 
       const blockReward = chromaticReward;
-      const totalRewards = price * blockReward * 86400 * machineHashrate / hashrate;
+      const machineHashrateTH = machineHashrate / 1000;
+      const totalRewards = price * blockReward * 86400 * machineHashrateTH / hashrate;
       const totalCost = wattage * 24 * costPerKwh / 1000;
 
       const currentNetEarning = (totalRewards - totalCost);
@@ -79,8 +80,8 @@ export function Welcome() {
   const form = useForm({
     initialValues: {
       machineCost: 750,
-      machineHashrate: 0.1,
-      wattage: 65,
+      machineHashrate: 200,
+      wattage: 100,
       costPerKwh: 0.1,
       hashRateIncreasePerDay: 100,
       startingHashrate: 0,
@@ -187,9 +188,10 @@ export function Welcome() {
 
         <NumberInput
           withAsterisk
-          label="Machine Hashrate (TH/s)"
-          placeholder="0.1"
-          precision={3}
+          label="Machine Hashrate (GH/s)"
+          placeholder="1000"
+          step={1}
+          min={0}
           {...form.getInputProps('machineHashrate')}
         />
 
