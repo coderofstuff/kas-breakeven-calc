@@ -1,13 +1,14 @@
 "use client";
 
-import { NumberInput, Table, TextInput, Button, Group, Text, Box } from '@mantine/core';
+import { NumberInput, Table, TextInput, Button, Group, Text, Box, Stack, Anchor, Grid } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import QRCode from 'react-qr-code';
 
 
-function calcBreakeven({ machineCost, machineHashrate, wattage, costPerKwh, hashRateIncreasePerDay, startingHashrate, startingDate, price }) {
+function calcBreakeven({ machineCost, machineHashrate, wattage, costPerKwh, hashRateIncreasePerDay, startingHashrate, startingDate, price, dailyPriceIncrease }) {
   let netEarnings = 0;
   let hashrate = Number(startingHashrate);
   let i = 0;
@@ -59,6 +60,7 @@ function calcBreakeven({ machineCost, machineHashrate, wattage, costPerKwh, hash
 
       // Iterate
       hashrate += Number(hashRateIncreasePerDay);
+      price += dailyPriceIncrease;
       currentDate.setDate(currentDate.getDate() + 1);
       i++;
   }
@@ -87,6 +89,7 @@ export function Welcome() {
       startingHashrate: 0,
       startingDate: today,
       price: 0,
+      dailyPriceIncrease: 0,
     },
     validate: {
       startingDate: (date) => {
@@ -139,8 +142,8 @@ export function Welcome() {
   if (hasCalculation) {
     const dateText = breakEvenDate.toISOString().split('T')[0]
     breakEvenText = (
-      <Group position='center' >
-        <Text c={canBreakEven ? 'green' : 'red'}>
+      <Group position='center' m={'1rem'}>
+        <Text c={canBreakEven ? 'green' : 'red'} fw={600}>
           { canBreakEven ? `You will break even on ${dateText}` : `You cannot break even and will be in the negative starting ${dateText}` }
         </Text>
       </Group>
@@ -175,6 +178,7 @@ export function Welcome() {
     );
   }
 
+  const DONATION_ADDR = 'kaspa:qpfp8gzttv5c356p8cdj0kv56py4n29w97prxrav65m0zpn58yuaz3awck5vl';
   return (
     <>
     <Box maw={340} mx="auto">
@@ -195,20 +199,25 @@ export function Welcome() {
           {...form.getInputProps('machineHashrate')}
         />
 
-        <NumberInput
-          withAsterisk
-          label="Wattage"
-          placeholder="65"
-          {...form.getInputProps('wattage')}
-        />
-
-        <NumberInput
-          withAsterisk
-          label="Cost per KWH"
-          placeholder="0.1"
-          precision={3}
-          {...form.getInputProps('costPerKwh')}
-        />
+        <Grid>
+          <Grid.Col span={6}>
+            <NumberInput
+              withAsterisk
+              label="Wattage"
+              placeholder="65"
+              {...form.getInputProps('wattage')}
+            />
+          </Grid.Col>
+          <Grid.Col span={6}>
+            <NumberInput
+              withAsterisk
+              label="Cost per KWH"
+              placeholder="0.1"
+              precision={3}
+              {...form.getInputProps('costPerKwh')}
+            />
+          </Grid.Col>
+        </Grid>
 
         <NumberInput
           withAsterisk
@@ -224,12 +233,26 @@ export function Welcome() {
           {...form.getInputProps('startingHashrate')}
         />
 
-        <TextInput
-          withAsterisk
-          label="Kaspa Price"
-          placeholder="0.5"
-          {...form.getInputProps('price')}
-        />
+        <Grid>
+          <Grid.Col span={6}>
+            <TextInput
+              withAsterisk
+              label="Kaspa Price"
+              placeholder="0.5"
+              {...form.getInputProps('price')}
+            />
+          </Grid.Col>
+          <Grid.Col span={6}>
+            <NumberInput
+              label="Daily Price Increase"
+              min={-1}
+              step={0.00001}
+              max={1}
+              precision={5}
+              {...form.getInputProps('dailyPriceIncrease')}
+            />
+          </Grid.Col>
+        </Grid>
 
         <DateInput
           withAsterisk
@@ -244,11 +267,33 @@ export function Welcome() {
           </Text>
         </Group>
 
-        <Group justify="flex-end" mt="md">
-          <Button type="submit">Estimate Breakeven Date</Button>
+        <Group position='center' mt="md">
+          <Button type="submit" w={'100%'}>Estimate Breakeven Date</Button>
         </Group>
       </form>
     </Box>
+
+    <Group position='center' mt={'1rem'}>
+        <Stack align='center' style={{gap: 0}} justify='end'>
+          
+
+          <div className="DonationQR">
+            <QRCode style={{'width': '100%', 'height': '100%'}}
+              value={DONATION_ADDR} />
+          </div>
+
+          <Text size={'xs'}>
+            Found this useful? Consider donating to:
+          </Text>
+          <Anchor c='#49eacb' href={`https://explorer.kaspa.org/addresses/${DONATION_ADDR}`} target="_blank" size={'xs'} align='center'>
+            {DONATION_ADDR}
+          </Anchor>
+
+          <Anchor c='#49eacb' href="https://github.com/coderofstuff/kas-breakeven-calc" target="_blank" size={'xs'}>
+            kas-breakeven-calc by coderofstuff
+          </Anchor>
+        </Stack>
+      </Group>
 
     {breakEvenText}
 
