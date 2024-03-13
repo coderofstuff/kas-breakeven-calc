@@ -55,6 +55,7 @@ function calcBreakeven({ machineCost, machineHashrate, wattage, costPerKwh, hash
         totalEarningsInKas: (netEarnings/price).toFixed(2),
         networkHashrate: hashrate,
         date: new Date(currentDate),
+        price,
       });
       console.info(currentDate, `Net Earnings USD => KAS: ${netEarnings.toFixed(2)} => ${(netEarnings/price).toFixed(2)}\tDaily USD => KAS: ${totalRewards.toFixed(3)} => ${(totalRewards / price).toFixed(2)}\tNetwork Hashrate: ${(hashrate / 1000).toFixed(2)}\tPH/s`);
 
@@ -149,7 +150,7 @@ export function Welcome() {
       </Group>
     );
 
-    const rows = dailyEarnings.map(({date, amountInFiat, amountInKas, totalEarningsInFiat, totalEarningsInKas, networkHashrate }) => {
+    const rows = dailyEarnings.map(({date, amountInFiat, amountInKas, totalEarningsInFiat, totalEarningsInKas, networkHashrate, price }) => {
       return (
         <tr key={date.toISOString().split('T')[0]}>
           <td>{date.toISOString().split('T')[0]}</td>
@@ -157,7 +158,8 @@ export function Welcome() {
           <td>{amountInKas} KAS</td>
           <td>${totalEarningsInFiat}</td>
           <td>{totalEarningsInKas} KAS</td>
-          <td>{(networkHashrate / 1000).toFixed(2)} PH/s</td><td/>
+          <td>{(networkHashrate / 1000).toFixed(2)} PH/s</td>
+          <td>${price.toFixed(5)}</td>
         </tr>
       )
     });
@@ -171,6 +173,7 @@ export function Welcome() {
             <th>Total Yield in Fiat</th>
             <th>Total Yield in KAS</th>
             <th>Network Hashrate</th>
+            <th>Price</th>
           </tr>
         </thead>
         <tbody>{rows}</tbody>
