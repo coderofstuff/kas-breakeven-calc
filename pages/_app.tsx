@@ -2,7 +2,8 @@ import { useState } from 'react';
 import NextApp, { AppProps, AppContext } from 'next/app';
 import { getCookie, setCookie } from 'cookies-next';
 import Head from 'next/head';
-import { Group, Stack, Anchor, MantineProvider, ColorScheme, ColorSchemeProvider } from '@mantine/core';
+import { MantineProvider, ColorScheme, ColorSchemeProvider } from '@mantine/core';
+import './global.css';
 
 export default function App(props: AppProps & { colorScheme: ColorScheme }) {
   const { Component, pageProps } = props;
@@ -26,17 +27,6 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
         <MantineProvider theme={{ colorScheme }} withGlobalStyles withNormalizeCSS>
           <Component {...pageProps} />
         </MantineProvider>
-
-        <Group position='center'>
-          <Stack align='center'>
-            <Anchor href="https://github.com/coderofstuff/kas-breakeven-calc" target="_blank" size={'xs'}>
-              kas-breakeven-calc by coderofstuff
-            </Anchor>
-            <Anchor href="https://explorer.kaspa.org/addresses/kaspa:qpfp8gzttv5c356p8cdj0kv56py4n29w97prxrav65m0zpn58yuaz3awck5vl?page=1" target="_blank" size={'xs'}>
-              Found this useful? Donate here
-            </Anchor>
-          </Stack>
-        </Group>
       </ColorSchemeProvider>
     </>
   );
