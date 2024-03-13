@@ -60,7 +60,7 @@ function calcBreakeven({ machineCost, machineHashrate, wattage, costPerKwh, hash
 
       // Iterate
       hashrate += Number(hashRateIncreasePerDay);
-      price += dailyPriceIncrease;
+      price += Number(dailyPriceIncrease);
       currentDate.setDate(currentDate.getDate() + 1);
       i++;
   }
