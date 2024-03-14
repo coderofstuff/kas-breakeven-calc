@@ -27,10 +27,23 @@ interface CalcBreakEvenArgs {
   startingHashrate: number,
   startingDate: Date,
   price: number,
-  dailyPriceIncrease: number
+  dailyPriceIncrease: number,
+  numOfUnits: number,
 }
 
-function calcBreakeven({ machineCost, machineHashrate, machineLifespan, wattage, costPerKwh, hashRateIncreasePerDay, startingHashrate, startingDate, price, dailyPriceIncrease }: CalcBreakEvenArgs) {
+function calcBreakeven({
+  machineCost,
+  machineHashrate,
+  machineLifespan,
+  wattage,
+  costPerKwh,
+  hashRateIncreasePerDay,
+  startingHashrate,
+  startingDate,
+  price,
+  dailyPriceIncrease,
+  numOfUnits,
+}: CalcBreakEvenArgs) {
   let netEarnings = 0;
   let totalKasEarnings = 0;
   let hashrate = Number(startingHashrate);
@@ -39,6 +52,7 @@ function calcBreakeven({ machineCost, machineHashrate, machineLifespan, wattage,
   let chromaticReward = 220;
   let chromaticDate = new Date('2023-05-08');
   let machineLifespanEndDate = new Date(currentDate);
+  let fleetCost = numOfUnits * machineCost;
   machineLifespanEndDate.setFullYear(machineLifespanEndDate.getFullYear() + machineLifespan);
 
   let checkDate = new Date(chromaticDate);
@@ -62,10 +76,10 @@ function calcBreakeven({ machineCost, machineHashrate, machineLifespan, wattage,
       }
 
       const blockReward = chromaticReward;
-      const machineHashrateTH = machineHashrate / 1000;
-      const currentRewardInKas = blockReward * 86400 * machineHashrateTH / hashrate;
+      const fleetHashrateTH = numOfUnits * machineHashrate / 1000;
+      const currentRewardInKas = blockReward * 86400 * fleetHashrateTH / hashrate;
       const totalRewards = price * currentRewardInKas;
-      const totalCost = wattage * 24 * costPerKwh / 1000;
+      const totalCost = numOfUnits * wattage * 24 * costPerKwh / 1000;
 
       const currentNetEarning = (totalRewards - totalCost);
 
@@ -76,13 +90,13 @@ function calcBreakeven({ machineCost, machineHashrate, machineLifespan, wattage,
           console.info('About to go into the negative but breakeven date found', breakEvenDate);
         }
         console.info(hashrate, blockReward, totalRewards, totalCost, "About to take on a loss. Cannot mine any further");
-        return {dailyEarnings, breakEvenDate, totalKasEarnings, netEarnings, canBreakEven: netEarnings >= machineCost, lifespanDate: currentDate, isLifeTimeReached: false};
+        return {dailyEarnings, breakEvenDate, totalKasEarnings, netEarnings, canBreakEven: netEarnings >= fleetCost, lifespanDate: currentDate, isLifeTimeReached: false};
       }
 
       netEarnings += currentNetEarning;
       totalKasEarnings += currentRewardInKas;
 
-      if (!breakEvenDate && netEarnings >= machineCost) {
+      if (!breakEvenDate && netEarnings >= fleetCost) {
         breakEvenDate = new Date(currentDate);
         console.info('---------------------');
         console.info('Found the breakeven date', breakEvenDate);
@@ -127,6 +141,7 @@ export function Welcome() {
   const [lifespanDate, setLifespanDate] = useState<Date>();
   const [netEarnings, setNetEarnings] = useState<number>();
   const [totalKasReward, setTotalKasReward] = useState<number>();
+  const [numOfUnits, setNumOfUnits] = useState<number>(1);
 
   const today = new Date();
 
@@ -142,6 +157,7 @@ export function Welcome() {
       startingDate: today,
       price: 0,
       dailyPriceIncrease: 0,
+      numOfUnits: 1,
     },
     validate: {
       startingDate: (date) => {
@@ -196,6 +212,7 @@ export function Welcome() {
     setLifespanDate(lifespanDate);
     setNetEarnings(netEarnings);
     setTotalKasReward(totalKasEarnings);
+    setNumOfUnits(values.numOfUnits);
   }
 
   let table = null;
@@ -222,13 +239,32 @@ export function Welcome() {
       }
 
       lifespanText += lifespanDateText;
+
+      let earningsText = null;
+
+      if (numOfUnits > 1) {
+        earningsText = (
+          <>
+            <Text fw={600}>
+              Total Fleet Earnings: {totalKasReward.toFixed(2)} KAS and ${netEarnings.toFixed(2)}
+            </Text>
+            <Text fw={600}>
+              Total Unit Earnings: {(totalKasReward / numOfUnits).toFixed(2)} KAS and ${(netEarnings / numOfUnits).toFixed(2)}
+            </Text>
+          </>
+        );
+      } else {
+        earningsText = (
+          <Text fw={600}>
+            Total Earnings: {totalKasReward.toFixed(2)} KAS and ${netEarnings.toFixed(2)}
+          </Text>
+        );
+      }
       
       lifeTimeEarnings = (
         <Group position='center' m={'1rem'}>
           <Stack >
-            <Text fw={600}>
-              Total earnings: {totalKasReward.toFixed(2)} KAS and ${netEarnings.toFixed(2)}
-            </Text>
+            {earningsText}
             <Text fw={600}>
               {lifespanText}
             </Text>
@@ -275,6 +311,18 @@ export function Welcome() {
       <form onSubmit={form.onSubmit(handleSubmit)}>
 
         <Text align='center' fw={600}>Machine Details</Text>
+
+        <NumberInput
+          withAsterisk
+          label="Number of Machines"
+          placeholder="1"
+          step={1}
+          min={1}
+          {...form.getInputProps('numOfUnits')}
+        />
+
+        <Divider m={'1rem'} label="Details Per Unit" labelPosition='center' />
+
         <Grid>
           <Grid.Col span={4}>
             <NumberInput
@@ -392,25 +440,25 @@ export function Welcome() {
     </Box>
 
     <Group position='center' mt={'1rem'}>
-        <Stack align='center' style={{gap: 0}} justify='end'>
+      <Stack align='center' style={{gap: 0}} justify='end'>
 
-          <div className="DonationQR">
-            <QRCode style={{'width': '100%', 'height': '100%'}}
-              value={DONATION_ADDR} />
-          </div>
+        <div className="DonationQR">
+          <QRCode style={{'width': '100%', 'height': '100%'}}
+            value={DONATION_ADDR} />
+        </div>
 
-          <Text size={'xs'}>
-            Found this useful? Consider donating to:
-          </Text>
-          <Anchor c='#49eacb' href={`https://explorer.kaspa.org/addresses/${DONATION_ADDR}`} target="_blank" size={'xs'} align='center'>
-            {DONATION_ADDR}
-          </Anchor>
+        <Text size={'xs'}>
+          Found this useful? Consider donating to:
+        </Text>
+        <Anchor c='#49eacb' href={`https://explorer.kaspa.org/addresses/${DONATION_ADDR}`} target="_blank" size={'xs'} align='center'>
+          {DONATION_ADDR}
+        </Anchor>
 
-          <Anchor c='#49eacb' href="https://github.com/coderofstuff/kas-breakeven-calc" target="_blank" size={'xs'}>
-            kas-breakeven-calc by coderofstuff
-          </Anchor>
-        </Stack>
-      </Group>
+        <Anchor c='#49eacb' href="https://github.com/coderofstuff/kas-breakeven-calc" target="_blank" size={'xs'}>
+          kas-breakeven-calc by coderofstuff
+        </Anchor>
+      </Stack>
+    </Group>
 
     {breakEvenText}
 
