@@ -7,7 +7,30 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import QRCode from 'react-qr-code';
 
-function calcBreakeven({ machineCost, machineHashrate, machineLifespan, wattage, costPerKwh, hashRateIncreasePerDay, startingHashrate, startingDate, price, dailyPriceIncrease }) {
+interface DailyEarnings {
+  amountInFiat: string,
+  amountInKas: string,
+  totalEarningsInFiat: string,
+  totalEarningsInKas: string,
+  networkHashrate: number,
+  date: Date,
+  price: number
+}
+
+interface CalcBreakEvenArgs {
+  machineCost: number,
+  machineHashrate: number,
+  machineLifespan: number,
+  wattage: number,
+  costPerKwh: number,
+  hashRateIncreasePerDay: number,
+  startingHashrate: number,
+  startingDate: Date,
+  price: number,
+  dailyPriceIncrease: number
+}
+
+function calcBreakeven({ machineCost, machineHashrate, machineLifespan, wattage, costPerKwh, hashRateIncreasePerDay, startingHashrate, startingDate, price, dailyPriceIncrease }: CalcBreakEvenArgs) {
   let netEarnings = 0;
   let totalKasEarnings = 0;
   let hashrate = Number(startingHashrate);
@@ -21,7 +44,7 @@ function calcBreakeven({ machineCost, machineHashrate, machineLifespan, wattage,
   let checkDate = new Date(chromaticDate);
   checkDate.setDate(chromaticDate.getDate() + 30);
 
-  const dailyEarnings = [];
+  const dailyEarnings: DailyEarnings[] = [];
 
   while (currentDate > chromaticDate) {
     chromaticDate = checkDate;
@@ -96,14 +119,14 @@ function calcBreakeven({ machineCost, machineHashrate, machineLifespan, wattage,
 }
 
 export function Welcome() {
-  const [dailyEarnings, setDailyEarnings] = useState([]);
-  const [canBreakEven, setCanBreakEven] = useState();
-  const [isLifeTimeReached, setIsLifeTimeReached] = useState();
-  const [hasCalculation, setHasCalculation] = useState(false);
-  const [breakEvenDate, setBreakEvenDate] = useState();
-  const [lifespanDate, setLifespanDate] = useState();
-  const [netEarnings, setNetEarnings] = useState();
-  const [totalKasReward, setTotalKasReward] = useState();
+  const [dailyEarnings, setDailyEarnings] = useState<DailyEarnings[]>([]);
+  const [canBreakEven, setCanBreakEven] = useState<boolean>();
+  const [isLifeTimeReached, setIsLifeTimeReached] = useState<boolean>();
+  const [hasCalculation, setHasCalculation] = useState<boolean>(false);
+  const [breakEvenDate, setBreakEvenDate] = useState<Date>();
+  const [lifespanDate, setLifespanDate] = useState<Date>();
+  const [netEarnings, setNetEarnings] = useState<number>();
+  const [totalKasReward, setTotalKasReward] = useState<number>();
 
   const today = new Date();
 
@@ -124,7 +147,10 @@ export function Welcome() {
       startingDate: (date) => {
         return date < new Date('2023-06-01') ? 'ASICs only arrived after 2023-06-01' : null;
       },
-    }
+      price: (value) => {
+        return isNaN(Number(value)) ? 'Price is not a number' : null;
+      },
+    },
   });
 
   useEffect(() => {
@@ -154,8 +180,11 @@ export function Welcome() {
     };
   }, []);
 
-  function handleSubmit(values) {
-    const {dailyEarnings, breakEvenDate, totalKasEarnings, netEarnings, canBreakEven, lifespanDate, isLifeTimeReached} = calcBreakeven(values);
+  function handleSubmit(values: CalcBreakEvenArgs) {
+    const {dailyEarnings, breakEvenDate, totalKasEarnings, netEarnings, canBreakEven, lifespanDate, isLifeTimeReached} = calcBreakeven({
+      ...values,
+      price: Number(values.price),
+    });
 
     console.info(dailyEarnings, breakEvenDate, totalKasEarnings, netEarnings, canBreakEven, lifespanDate, isLifeTimeReached);
 
@@ -174,7 +203,7 @@ export function Welcome() {
   let lifeTimeEarnings = null;
 
   if (hasCalculation) {
-    const dateText = breakEvenDate.toISOString().split('T')[0]
+    const dateText = breakEvenDate ? breakEvenDate.toISOString().split('T')[0] : '';
     breakEvenText = (
       <Group position='center' m={'1rem'}>
         <Text c={canBreakEven ? 'green' : 'red'} fw={600}>
@@ -183,8 +212,8 @@ export function Welcome() {
       </Group>
     );
 
-    if (canBreakEven) {
-      const lifespanDateText = lifespanDate.toISOString().split('T')[0]
+    if (canBreakEven && totalKasReward && netEarnings) {
+      const lifespanDateText = lifespanDate ? lifespanDate.toISOString().split('T')[0] : '';
       let lifespanText = null;
       if (isLifeTimeReached) {
         lifespanText = 'Until end of machine lifespan on: ';
@@ -272,7 +301,7 @@ export function Welcome() {
                 label="Lifespan (Years)"
                 placeholder="1000"
                 step={1}
-                max={5}
+                max={6}
                 min={1}
                 {...form.getInputProps('machineLifespan')}
               />
