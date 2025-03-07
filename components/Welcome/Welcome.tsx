@@ -132,10 +132,10 @@ export function Welcome() {
 
   const form = useForm({
     initialValues: {
-      machineCost: 750,
-      machineHashrate: 200,
+      machineCost: 800,
+      machineHashrate: 4200,
       machineLifespan: 5,
-      wattage: 100,
+      wattage: 500,
       costPerKwh: 0.1,
       hashRateIncreasePerDay: 100,
       startingHashrate: 0,
